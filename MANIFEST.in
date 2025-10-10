@@ -1,0 +1,2 @@
+include LICENSE
+recursive-include src/pte_adapter_model_explorer/schema *.fbs LICENSE

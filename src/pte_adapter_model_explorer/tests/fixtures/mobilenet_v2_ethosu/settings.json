@@ -1,0 +1,3 @@
+{
+    "delegate_file_paths": ["src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu/output_tag1_TOSA-1.0+INT+int16+u55.tosa"]
+}

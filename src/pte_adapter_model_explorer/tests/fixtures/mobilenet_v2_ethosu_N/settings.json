@@ -1,0 +1,13 @@
+{
+    "delegate_file_paths": ["src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag1_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag46_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag70_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag115_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag139_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag184_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag208_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag232_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag277_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag301_TOSA.tosa",
+                            "src/pte_adapter_model_explorer/tests/fixtures/mobilenet_v2_ethosu_N/output_tag346_TOSA.tosa"]
+}
