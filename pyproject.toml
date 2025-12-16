@@ -10,7 +10,7 @@ requires = ["setuptools>=61", "wheel"]
 
 [project]
 name = "pte-adapter-model-explorer"
-version = "0.0.1"
+version = "0.0.2"
 description = "Adapter for Model Explorer to support PTE files for Ethos-U and VGF targets"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
