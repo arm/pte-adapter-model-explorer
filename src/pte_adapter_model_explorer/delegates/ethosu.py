@@ -30,22 +30,27 @@ def ethosu_delegate_handler(blob: bytes, settings: Dict) -> gb.Graph:
 
     call_count: int = settings.pop("delegate_call_count")
     delegate_file_paths: list[Path] = settings.pop("delegate_file_paths")
-    delegate_file_paths = [
-        path for path in delegate_file_paths if path.name.endswith(".tosa")
-    ]
-    delegate_file_index: int = len(delegate_file_paths) - 1 - call_count
-    delegate_file_path: Path = delegate_file_paths[delegate_file_index]
 
-    tosa_adapter_graphs: ModelExplorerGraphs = tosa_adapter.convert(
-        str(delegate_file_path), settings=settings
-    )
+    if delegate_file_paths:
+        delegate_file_paths = [
+            path for path in delegate_file_paths if path.name.endswith(".tosa")
+        ]
+        delegate_file_index: int = len(delegate_file_paths) - 1 - call_count
+        delegate_file_path: Path = delegate_file_paths[delegate_file_index]
 
-    if (
-        "graphs" not in tosa_adapter_graphs
-        or not tosa_adapter_graphs["graphs"]
-    ):
-        raise ValueError(
-            f"TOSA adapter did not return any graphs for delegate file {delegate_file_path}"
+        tosa_adapter_graphs: ModelExplorerGraphs = tosa_adapter.convert(
+            str(delegate_file_path), settings=settings
         )
+
+        if (
+            "graphs" not in tosa_adapter_graphs
+            or not tosa_adapter_graphs["graphs"]
+        ):
+            raise ValueError(
+                f"TOSA adapter did not return any graphs for delegate file {delegate_file_paths}"
+            )
+        else:
+            return tosa_adapter_graphs["graphs"][0]
+
     else:
-        return tosa_adapter_graphs["graphs"][0]
+        return gb.Graph(id="EthosUBackend")
