@@ -15,6 +15,7 @@ from ..executorch_flatbuffer import (
     EValueT,
     KernelTypes,
     Program,
+    TensorT,
 )
 
 
@@ -85,7 +86,9 @@ def is_tensor_output_candidate(evalue: EValueT) -> bool:
 
     if evalue.valType == KernelTypes.Tensor:
         tensor = evalue.val
-        return tensor is not None and int(tensor.dataBufferIdx) == 0
+        if isinstance(tensor, TensorT):
+            return int(tensor.dataBufferIdx) == 0
+        return False
 
     return evalue.valType in (
         KernelTypes.TensorList,

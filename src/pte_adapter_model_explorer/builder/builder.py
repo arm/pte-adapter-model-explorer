@@ -257,9 +257,9 @@ class PteGraphBuilder:
         chains: Optional[List[ChainT]],
     ) -> List[gb.GraphNode]:
         nodes: List[gb.GraphNode] = []
-        chains: list[ChainT] = chains or []
+        chain_list: list[ChainT] = chains or []
 
-        for chain_index, chain in enumerate(chains):
+        for chain_index, chain in enumerate(chain_list):
             instructions: list[InstructionT] = chain.instructions or []
 
             if not instructions:
