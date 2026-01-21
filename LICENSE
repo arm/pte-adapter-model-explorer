@@ -14,8 +14,10 @@ Files under the following directories are automatically generated from the above
 files:
 - src/pte_adapter_model_explorer/executorch_flatbuffer
 
-The PTE model files in tests/fixtures were generated via the ExecuTorch
-toolchain using`examples/arm/aot_arm_compiler.py` and are licensed accordingly.
+The PTE model files in tests/fixtures are generated from the ExecuTorch toolchain
+and are licensed under the terms applicable to their respective source tools:
+- \_ethosu\*/\*\*.pte and \_vgf\*/\*\*.pte: generated using `examples/arm/aot_arm_compiler.py`
+- \_xnnpack\*/\*\*.pte: generated using `examples/xnnpack/aot_compiler.py`
 
 ================================================================================
 

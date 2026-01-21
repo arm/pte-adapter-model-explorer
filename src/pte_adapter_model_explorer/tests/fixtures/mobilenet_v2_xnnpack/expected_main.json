@@ -1,0 +1,593 @@
+{
+  "label": "input.pte",
+  "graphs": [
+    {
+      "id": "forward",
+      "nodes": [
+        {
+          "id": "GraphInputs",
+          "label": "Graph Inputs",
+          "namespace": "GraphInputs",
+          "subgraphIds": [],
+          "attrs": [],
+          "incomingEdges": [],
+          "outputsMetadata": [
+            {
+              "id": "52",
+              "attrs": [
+                {
+                  "key": "EValue Index",
+                  "value": "52"
+                },
+                {
+                  "key": "scalarType",
+                  "value": "6"
+                },
+                {
+                  "key": "storageOffset",
+                  "value": "0"
+                },
+                {
+                  "key": "sizes",
+                  "value": "[1, 3, 224, 224]"
+                },
+                {
+                  "key": "dimOrder",
+                  "value": "[0, 1, 2, 3]"
+                },
+                {
+                  "key": "requiresGrad",
+                  "value": "False"
+                },
+                {
+                  "key": "dataBufferIdx",
+                  "value": "0"
+                },
+                {
+                  "key": "allocationInfo",
+                  "value": "AllocationDetailsT"
+                },
+                {
+                  "key": "layout",
+                  "value": "0"
+                },
+                {
+                  "key": "shapeDynamism",
+                  "value": "0"
+                },
+                {
+                  "key": "extraTensorInfo",
+                  "value": "None"
+                },
+                {
+                  "key": "valType",
+                  "value": "5"
+                }
+              ]
+            }
+          ],
+          "inputsMetadata": [],
+          "style": null,
+          "config": null
+        },
+        {
+          "id": "forward_0_0",
+          "label": "XnnpackBackend",
+          "namespace": "forward",
+          "subgraphIds": [
+            "forward_0_0"
+          ],
+          "attrs": [
+            {
+              "key": "Instruction Type",
+              "value": "DelegateCall"
+            },
+            {
+              "key": "delegateIndex",
+              "value": "0"
+            },
+            {
+              "key": "args",
+              "value": "[52, 53]"
+            },
+            {
+              "key": "instrArgsType",
+              "value": "2"
+            }
+          ],
+          "incomingEdges": [
+            {
+              "sourceNodeId": "GraphInputs",
+              "sourceNodeOutputId": "52",
+              "targetNodeInputId": "52"
+            }
+          ],
+          "outputsMetadata": [
+            {
+              "id": "53",
+              "attrs": [
+                {
+                  "key": "EValue Index",
+                  "value": "53"
+                },
+                {
+                  "key": "scalarType",
+                  "value": "6"
+                },
+                {
+                  "key": "storageOffset",
+                  "value": "0"
+                },
+                {
+                  "key": "sizes",
+                  "value": "[1, 1280, 1, 1]"
+                },
+                {
+                  "key": "dimOrder",
+                  "value": "[0, 1, 2, 3]"
+                },
+                {
+                  "key": "requiresGrad",
+                  "value": "False"
+                },
+                {
+                  "key": "dataBufferIdx",
+                  "value": "0"
+                },
+                {
+                  "key": "allocationInfo",
+                  "value": "AllocationDetailsT"
+                },
+                {
+                  "key": "layout",
+                  "value": "0"
+                },
+                {
+                  "key": "shapeDynamism",
+                  "value": "0"
+                },
+                {
+                  "key": "extraTensorInfo",
+                  "value": "None"
+                },
+                {
+                  "key": "valType",
+                  "value": "5"
+                }
+              ]
+            }
+          ],
+          "inputsMetadata": [
+            {
+              "id": "52",
+              "attrs": [
+                {
+                  "key": "EValue Index",
+                  "value": "52"
+                },
+                {
+                  "key": "scalarType",
+                  "value": "6"
+                },
+                {
+                  "key": "storageOffset",
+                  "value": "0"
+                },
+                {
+                  "key": "sizes",
+                  "value": "[1, 3, 224, 224]"
+                },
+                {
+                  "key": "dimOrder",
+                  "value": "[0, 1, 2, 3]"
+                },
+                {
+                  "key": "requiresGrad",
+                  "value": "False"
+                },
+                {
+                  "key": "dataBufferIdx",
+                  "value": "0"
+                },
+                {
+                  "key": "allocationInfo",
+                  "value": "AllocationDetailsT"
+                },
+                {
+                  "key": "layout",
+                  "value": "0"
+                },
+                {
+                  "key": "shapeDynamism",
+                  "value": "0"
+                },
+                {
+                  "key": "extraTensorInfo",
+                  "value": "None"
+                },
+                {
+                  "key": "valType",
+                  "value": "5"
+                }
+              ]
+            }
+          ],
+          "style": null,
+          "config": null
+        },
+        {
+          "id": "forward_0_1",
+          "label": "aten::clone",
+          "namespace": "forward",
+          "subgraphIds": [],
+          "attrs": [
+            {
+              "key": "Instruction Type",
+              "value": "KernelCall"
+            },
+            {
+              "key": "opIndex",
+              "value": "0"
+            },
+            {
+              "key": "args",
+              "value": "[54, 56, 55, 55]"
+            },
+            {
+              "key": "instrArgsType",
+              "value": "1"
+            }
+          ],
+          "incomingEdges": [],
+          "outputsMetadata": [
+            {
+              "id": "54",
+              "attrs": [
+                {
+                  "key": "EValue Index",
+                  "value": "54"
+                },
+                {
+                  "key": "scalarType",
+                  "value": "6"
+                },
+                {
+                  "key": "storageOffset",
+                  "value": "0"
+                },
+                {
+                  "key": "sizes",
+                  "value": "[1, 1280]"
+                },
+                {
+                  "key": "dimOrder",
+                  "value": "[0, 1]"
+                },
+                {
+                  "key": "requiresGrad",
+                  "value": "False"
+                },
+                {
+                  "key": "dataBufferIdx",
+                  "value": "0"
+                },
+                {
+                  "key": "allocationInfo",
+                  "value": "AllocationDetailsT"
+                },
+                {
+                  "key": "layout",
+                  "value": "0"
+                },
+                {
+                  "key": "shapeDynamism",
+                  "value": "0"
+                },
+                {
+                  "key": "extraTensorInfo",
+                  "value": "None"
+                },
+                {
+                  "key": "valType",
+                  "value": "5"
+                }
+              ]
+            },
+            {
+              "id": "55",
+              "attrs": [
+                {
+                  "key": "EValue Index",
+                  "value": "55"
+                },
+                {
+                  "key": "scalarType",
+                  "value": "6"
+                },
+                {
+                  "key": "storageOffset",
+                  "value": "0"
+                },
+                {
+                  "key": "sizes",
+                  "value": "[1, 1280]"
+                },
+                {
+                  "key": "dimOrder",
+                  "value": "[0, 1]"
+                },
+                {
+                  "key": "requiresGrad",
+                  "value": "False"
+                },
+                {
+                  "key": "dataBufferIdx",
+                  "value": "0"
+                },
+                {
+                  "key": "allocationInfo",
+                  "value": "AllocationDetailsT"
+                },
+                {
+                  "key": "layout",
+                  "value": "0"
+                },
+                {
+                  "key": "shapeDynamism",
+                  "value": "0"
+                },
+                {
+                  "key": "extraTensorInfo",
+                  "value": "None"
+                },
+                {
+                  "key": "valType",
+                  "value": "5"
+                }
+              ]
+            }
+          ],
+          "inputsMetadata": [
+            {
+              "id": "56",
+              "attrs": [
+                {
+                  "key": "EValue Index",
+                  "value": "56"
+                },
+                {
+                  "key": "valType",
+                  "value": "1"
+                }
+              ]
+            }
+          ],
+          "style": null,
+          "config": null
+        },
+        {
+          "id": "forward_0_2",
+          "label": "XnnpackBackend",
+          "namespace": "forward",
+          "subgraphIds": [
+            "forward_0_2"
+          ],
+          "attrs": [
+            {
+              "key": "Instruction Type",
+              "value": "DelegateCall"
+            },
+            {
+              "key": "delegateIndex",
+              "value": "1"
+            },
+            {
+              "key": "args",
+              "value": "[55, 57]"
+            },
+            {
+              "key": "instrArgsType",
+              "value": "2"
+            }
+          ],
+          "incomingEdges": [
+            {
+              "sourceNodeId": "forward_0_1",
+              "sourceNodeOutputId": "55",
+              "targetNodeInputId": "55"
+            }
+          ],
+          "outputsMetadata": [
+            {
+              "id": "57",
+              "attrs": [
+                {
+                  "key": "EValue Index",
+                  "value": "57"
+                },
+                {
+                  "key": "scalarType",
+                  "value": "6"
+                },
+                {
+                  "key": "storageOffset",
+                  "value": "0"
+                },
+                {
+                  "key": "sizes",
+                  "value": "[1, 1000]"
+                },
+                {
+                  "key": "dimOrder",
+                  "value": "[0, 1]"
+                },
+                {
+                  "key": "requiresGrad",
+                  "value": "False"
+                },
+                {
+                  "key": "dataBufferIdx",
+                  "value": "0"
+                },
+                {
+                  "key": "allocationInfo",
+                  "value": "AllocationDetailsT"
+                },
+                {
+                  "key": "layout",
+                  "value": "0"
+                },
+                {
+                  "key": "shapeDynamism",
+                  "value": "0"
+                },
+                {
+                  "key": "extraTensorInfo",
+                  "value": "None"
+                },
+                {
+                  "key": "valType",
+                  "value": "5"
+                }
+              ]
+            }
+          ],
+          "inputsMetadata": [
+            {
+              "id": "55",
+              "attrs": [
+                {
+                  "key": "EValue Index",
+                  "value": "55"
+                },
+                {
+                  "key": "scalarType",
+                  "value": "6"
+                },
+                {
+                  "key": "storageOffset",
+                  "value": "0"
+                },
+                {
+                  "key": "sizes",
+                  "value": "[1, 1280]"
+                },
+                {
+                  "key": "dimOrder",
+                  "value": "[0, 1]"
+                },
+                {
+                  "key": "requiresGrad",
+                  "value": "False"
+                },
+                {
+                  "key": "dataBufferIdx",
+                  "value": "0"
+                },
+                {
+                  "key": "allocationInfo",
+                  "value": "AllocationDetailsT"
+                },
+                {
+                  "key": "layout",
+                  "value": "0"
+                },
+                {
+                  "key": "shapeDynamism",
+                  "value": "0"
+                },
+                {
+                  "key": "extraTensorInfo",
+                  "value": "None"
+                },
+                {
+                  "key": "valType",
+                  "value": "5"
+                }
+              ]
+            }
+          ],
+          "style": null,
+          "config": null
+        },
+        {
+          "id": "GraphOutputs",
+          "label": "Graph Outputs",
+          "namespace": "GraphOutputs",
+          "subgraphIds": [],
+          "attrs": [],
+          "incomingEdges": [
+            {
+              "sourceNodeId": "forward_0_2",
+              "sourceNodeOutputId": "57",
+              "targetNodeInputId": "57"
+            }
+          ],
+          "outputsMetadata": [],
+          "inputsMetadata": [
+            {
+              "id": "57",
+              "attrs": [
+                {
+                  "key": "EValue Index",
+                  "value": "57"
+                },
+                {
+                  "key": "scalarType",
+                  "value": "6"
+                },
+                {
+                  "key": "storageOffset",
+                  "value": "0"
+                },
+                {
+                  "key": "sizes",
+                  "value": "[1, 1000]"
+                },
+                {
+                  "key": "dimOrder",
+                  "value": "[0, 1]"
+                },
+                {
+                  "key": "requiresGrad",
+                  "value": "False"
+                },
+                {
+                  "key": "dataBufferIdx",
+                  "value": "0"
+                },
+                {
+                  "key": "allocationInfo",
+                  "value": "AllocationDetailsT"
+                },
+                {
+                  "key": "layout",
+                  "value": "0"
+                },
+                {
+                  "key": "shapeDynamism",
+                  "value": "0"
+                },
+                {
+                  "key": "extraTensorInfo",
+                  "value": "None"
+                },
+                {
+                  "key": "valType",
+                  "value": "5"
+                }
+              ]
+            }
+          ],
+          "style": null,
+          "config": null
+        }
+      ],
+      "groupNodeAttributes": null,
+      "groupNodeConfigs": null,
+      "nodeLabelsToHide": null,
+      "tasksData": null,
+      "layoutConfigs": null
+    }
+  ]
+}

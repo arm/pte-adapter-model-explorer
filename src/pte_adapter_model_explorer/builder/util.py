@@ -76,6 +76,7 @@ def dict_to_key_value_list(dict: Dict[str, Any]) -> List[gb.KeyValue]:
             v_str = value.__class__.__name__
         else:
             v_str = str(value)
+
         result.append(gb.KeyValue(key=key, value=v_str))
     return result
 

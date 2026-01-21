@@ -12,6 +12,7 @@ from model_explorer import graph_builder as gb
 
 from ..delegates.ethosu import ETHOSU_DELEGATE_NAME, ethosu_delegate_handler
 from ..delegates.vgf import VGF_DELEGATE_NAME, vgf_delegate_handler
+from ..delegates.xnnpack import XNNPACK_DELEGATE_NAME, xnnpack_delegate_handler
 from ..executorch_flatbuffer import (
     BackendDelegateDataReferenceT,
     BackendDelegateInlineDataT,
@@ -28,6 +29,7 @@ from ..extended_header import (
 DELEGATE_HANDLERS = {
     VGF_DELEGATE_NAME: vgf_delegate_handler,
     ETHOSU_DELEGATE_NAME: ethosu_delegate_handler,
+    XNNPACK_DELEGATE_NAME: xnnpack_delegate_handler,
 }
 
 
