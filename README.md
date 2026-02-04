@@ -1,7 +1,7 @@
 # PTE Adapter for Model Explorer
 
 PTE Adapter for [google-ai-edge/model-explorer](https://github.com/google-ai-edge/model-explorer) that enables visualization of [PTE](https://docs.pytorch.org/executorch/stable/pte-file-format.html) files for
-[Arm® Ethos™-U NPU Backend](https://docs.pytorch.org/executorch/stable/backends-arm-ethos-u.html), [Arm® VGF Backend](https://docs.pytorch.org/executorch/stable/backends-arm-vgf.html) and [XNNPACK](https://docs.pytorch.org/executorch/stable/backends/xnnpack/xnnpack-overview.html) targets.
+[Arm® Ethos™-U NPU Backend](https://docs.pytorch.org/executorch/1.0/backends-arm-ethos-u.html), [Arm® VGF Backend](https://docs.pytorch.org/executorch/1.0/backends-arm-vgf.html) and [XNNPACK](https://docs.pytorch.org/executorch/1.0/backends/xnnpack/xnnpack-overview.html) targets.
 
 ![Visualization of a PTE model with the PTE Adapter](https://raw.githubusercontent.com/arm/pte-adapter-model-explorer/main/screenshots/pte-adapter-readme-screenshot.png)
 
