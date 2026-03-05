@@ -7,10 +7,22 @@ from .xnnpack_generated import *
 # at runtime; add aliases once here so we don't touch generated files.
 from . import xnnpack_generated as _xnnpack 
 
-if not hasattr(_xnnpack, "XNodeUnionCreator") and hasattr(_xnnpack, "XnodeUnionCreator"):
-    setattr(_xnnpack, "XNodeUnionCreator", getattr(_xnnpack, "XnodeUnionCreator"))
+def _alias_creator(alias_name, *candidate_names):
+    if hasattr(_xnnpack, alias_name):
+        target = getattr(_xnnpack, alias_name)
+    else:
+        target = None
+        for candidate_name in candidate_names:
+            if hasattr(_xnnpack, candidate_name):
+                target = getattr(_xnnpack, candidate_name)
+                setattr(_xnnpack, alias_name, target)
+                break
 
-if not hasattr(_xnnpack, "XValueUnionCreator") and hasattr(_xnnpack, "XvalueUnionCreator"):
-    setattr(_xnnpack, "XValueUnionCreator", getattr(_xnnpack, "XvalueUnionCreator"))
+    if target is not None and alias_name not in globals():
+        globals()[alias_name] = target
+
+_alias_creator("XNodeUnionCreator", "XnodeUnionCreator")
+_alias_creator("XValueUnionCreator", "XvalueUnionCreator")
+_alias_creator("XNNQuantParamsCreator", "XnnquantParamsCreator", "XnnQuantParamsCreator")
 
 del _xnnpack

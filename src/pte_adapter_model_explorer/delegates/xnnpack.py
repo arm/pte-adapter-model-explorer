@@ -14,6 +14,7 @@ from ..builder.util import dict_to_key_value_list, enum_name
 from ..constants import GRAPH_INPUT_ANNOTATION, GRAPH_OUTPUT_ANNOTATION
 from ..executorch_flatbuffer import xnnpack_generated as xg
 
+XNN_INVALID_VALUE_ID = 0xFFFFFFFF
 XNNPACK_DELEGATE_NAME = "XnnpackBackend"
 _XNNPACK_IDENTIFIER = b"XN01"
 _FLATBUFFER_IDENTIFIER_OFFSET = 4
@@ -127,11 +128,17 @@ def _build_node(
 ) -> gb.GraphNode:
     label = enum_name(xg.XNodeUnion, xnode.xnodeUnionType)
     node_id = str(node_index)
-    inputs = _collect_ids(xnode.xnodeUnion, prefix="input")
-    outputs = _collect_ids(xnode.xnodeUnion, prefix="output")
+    raw_inputs = _collect_ids(xnode.xnodeUnion, prefix="input")
+    raw_outputs = _collect_ids(xnode.xnodeUnion, prefix="output")
 
-    for vid in outputs:
+    for vid in raw_outputs:
         value_producers[vid] = node_id
+
+    def _valid(vid: int) -> bool:
+        return 0 <= vid < len(values) and vid != XNN_INVALID_VALUE_ID
+
+    inputs = [vid for vid in raw_inputs if _valid(vid)]
+    outputs = [vid for vid in raw_outputs if _valid(vid)]
 
     incoming_edges = [
         gb.IncomingEdge(
