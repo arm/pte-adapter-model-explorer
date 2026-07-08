@@ -1,5 +1,6 @@
 {
   "label": "delegates",
+  "graphSorting": "node_count_desc",
   "graphs": [
     {
       "id": "forward_0_0",

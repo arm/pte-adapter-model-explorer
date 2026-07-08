@@ -1,5 +1,6 @@
 {
   "label": "input.pte",
+  "graphSorting": "node_count_desc",
   "graphs": [
     {
       "id": "forward",

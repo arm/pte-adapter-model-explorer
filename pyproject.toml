@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
+# SPDX-FileCopyrightText: Copyright 2025-2026 Arm Limited and/or its affiliates <open-source-office@arm.com>
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License v2.0
@@ -15,7 +15,8 @@ description = "Adapter for Model Explorer to support PTE files for Ethos-U and V
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 keywords = ["model-explorer", "ethos", "pte", "visualization"]
-license = { file = "LICENSE" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -23,14 +24,14 @@ classifiers = [
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12"
+  "Programming Language :: Python :: 3.12",
 ]
 
 dependencies = [
   "ai-edge-model-explorer>=0.1.28,<0.2.0",
   "vgf-adapter-model-explorer == 0.4.1",
   "tosa-adapter-model-explorer == 0.1.0",
-  "flatbuffers>25.9"
+  "flatbuffers>25.9",
 ]
 
 [project.urls]
@@ -38,17 +39,17 @@ Repository = "https://github.com/arm/pte-adapter-model-explorer"
 
 [dependency-groups]
 dev = [
-    "pytest==9.0.1",
-    "pytest-timeout==2.4.0",
-    "ruff==0.14.2",
-    "pyright==1.1.407",
-    "ai-edge-model-explorer==0.1.28",
+  "pytest==9.0.1",
+  "pytest-timeout==2.4.0",
+  "ruff==0.14.2",
+  "pyright==1.1.407",
+  "ai-edge-model-explorer==0.1.32",
 ]
 coverage = [
-    "pytest-cov==7.0.0",
+  "pytest-cov==7.0.0",
 ]
 build = [
-    "build==1.3.0"
+  "build==1.3.0",
 ]
 
 [tool.pyright]
@@ -87,11 +88,11 @@ exclude = ["build", "src/pte_adapter_model_explorer/executorch_flatbuffer"]
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/rules/
 select = [
-    "F", #Pyflakes
-    "B", #Bugbear
-    "I", #Isort
-    "SIM", #Simplify
-    "C4", #Comprehensions
+  "F", #Pyflakes
+  "B", #Bugbear
+  "I", #Isort
+  "SIM", #Simplify
+  "C4", #Comprehensions
 ]
 
 [tool.coverage.run]

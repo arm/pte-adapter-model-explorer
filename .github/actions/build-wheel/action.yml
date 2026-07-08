@@ -4,6 +4,9 @@ description: Builds wheels for PTE Adapter for Model Explorer
 inputs:
   python-version:
     required: true
+  internal-dev-version:
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -13,8 +16,15 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
-    - name: Checkout plugin repo
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - name: Set internal development version
+      if: inputs.internal-dev-version == 'true'
+      shell: bash
+      run: |
+        BASE_VERSION=$(sed -n 's/^version = "\(.*\)"$/\1/p' pyproject.toml | head -n 1)
+        SHORT_SHA="${GITHUB_SHA::7}"
+        DEV_VERSION="${BASE_VERSION}.dev${GITHUB_RUN_NUMBER}+${SHORT_SHA}"
+        echo "Building internal development version ${DEV_VERSION} from ${GITHUB_SHA}"
+        sed -i "s/^version = \".*\"$/version = \"${DEV_VERSION}\"/" pyproject.toml
 
     - name: Build plugin package
       shell: bash
