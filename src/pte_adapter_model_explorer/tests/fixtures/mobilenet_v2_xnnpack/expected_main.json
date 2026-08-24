@@ -76,7 +76,7 @@
           "label": "XnnpackBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_0"
+            "input.pte::forward_0_0"
           ],
           "attrs": [
             {
@@ -371,7 +371,7 @@
           "label": "XnnpackBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_2"
+            "input.pte::forward_0_2"
           ],
           "attrs": [
             {

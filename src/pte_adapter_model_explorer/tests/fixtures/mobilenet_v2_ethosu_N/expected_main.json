@@ -304,7 +304,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_1"
+            "input.pte::forward_0_1"
           ],
           "attrs": [
             {
@@ -1404,7 +1404,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_6"
+            "input.pte::forward_0_6"
           ],
           "attrs": [
             {
@@ -2732,7 +2732,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_12"
+            "input.pte::forward_0_12"
           ],
           "attrs": [
             {
@@ -3551,7 +3551,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_16"
+            "input.pte::forward_0_16"
           ],
           "attrs": [
             {
@@ -4879,7 +4879,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_22"
+            "input.pte::forward_0_22"
           ],
           "attrs": [
             {
@@ -5926,7 +5926,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_27"
+            "input.pte::forward_0_27"
           ],
           "attrs": [
             {
@@ -6745,7 +6745,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_31"
+            "input.pte::forward_0_31"
           ],
           "attrs": [
             {
@@ -8073,7 +8073,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_37"
+            "input.pte::forward_0_37"
           ],
           "attrs": [
             {
@@ -8892,7 +8892,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_41"
+            "input.pte::forward_0_41"
           ],
           "attrs": [
             {
@@ -10220,7 +10220,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_47"
+            "input.pte::forward_0_47"
           ],
           "attrs": [
             {
@@ -11039,7 +11039,7 @@
           "label": "EthosUBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_51"
+            "input.pte::forward_0_51"
           ],
           "attrs": [
             {

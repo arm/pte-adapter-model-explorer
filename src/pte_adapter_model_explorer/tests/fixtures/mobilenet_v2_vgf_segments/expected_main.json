@@ -304,7 +304,7 @@
           "label": "VgfBackend",
           "namespace": "forward",
           "subgraphIds": [
-            "forward_0_1"
+            "input.pte::forward_0_1"
           ],
           "attrs": [
             {

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
+# SPDX-FileCopyrightText: Copyright 2025-2026 Arm Limited and/or its affiliates <open-source-office@arm.com>
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License v2.0
@@ -242,7 +242,10 @@ class PteGraphBuilder:
                         self._program_def.segments,
                     )
                     if delegate_graph:
-                        delegate_graph.id = new_node.id
+                        # Graph ids are resolved globally by Model Explorer.
+                        # Make delegate graph IDs unique for each model to avoid
+                        # conflicts when multiple PTE files have the same execution plan.
+                        delegate_graph.id = f"{self.model_name}::{new_node.id}"
                         new_node.subgraphIds.append(delegate_graph.id)
                         self._delegate_graphs.append(delegate_graph)
                         per_delegate_call_count[label] += 1
