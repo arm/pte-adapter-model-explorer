@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
+# SPDX-FileCopyrightText: Copyright 2025-2026 Arm Limited and/or its affiliates <open-source-office@arm.com>
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License v2.0
@@ -34,14 +34,28 @@ def vgf_delegate_handler(blob: bytes, settings: Dict) -> gb.Graph:
         vgf_adapter_graphs = vgf_adapter.convert(
             str(tmp_path), settings=settings
         )
-        if (
-            "graphs" not in vgf_adapter_graphs
-            or not vgf_adapter_graphs["graphs"]
-        ):
+        graphs = vgf_adapter_graphs.get("graphs")
+        if graphs is None:
+            collections = vgf_adapter_graphs.get("graphCollections") or []
+            if len(collections) != 1:
+                raise ValueError(
+                    "VGF delegate requires exactly one graph collection"
+                )
+            collection = collections[0]
+            graphs = (
+                collection.get("graphs", [])
+                if isinstance(collection, dict)
+                else collection.graphs
+            )
+        if not graphs:
             raise ValueError(
                 "VGF adapter did not return any graphs for delegate instruction blob"
             )
-        return vgf_adapter_graphs["graphs"][0]
+        if len(graphs) != 1:
+            raise ValueError(
+                "VGF delegate requires exactly one top-level graph"
+            )
+        return graphs[0]
 
     finally:
         if tmp_path:

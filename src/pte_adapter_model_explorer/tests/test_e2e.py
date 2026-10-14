@@ -1,17 +1,20 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
+# SPDX-FileCopyrightText: Copyright 2025-2026 Arm Limited and/or its affiliates <open-source-office@arm.com>
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License v2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for license information.
 
 import glob
+import gzip
 import json
 import os
 import re
 from dataclasses import asdict
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 
 from ..builder import builder
 
@@ -28,7 +31,7 @@ _KEY_QUOTE_PATTERN = re.compile(
 
 
 def load_expected_fixture(path: str):
-    with open(path) as f:
+    with gzip.open(path, "rt") if path.endswith(".gz") else open(path) as f:
         raw = f.read()
     try:
         return json.loads(raw)
@@ -79,6 +82,14 @@ def test_e2e(case_dir):
     )
 
     if os.path.exists(expected_delegates_json):
+        # VGF 0.5 adds hierarchy metadata and a different graph representation.
+        # Keep exact fixture comparisons for both supported adapter families.
+        vgf_0_5_fixture = Path(case_dir) / "expected_delegates_vgf_0_5.json.gz"
+        if (
+            Version(version("vgf-adapter-model-explorer")) >= Version("0.5")
+            and vgf_0_5_fixture.exists()
+        ):
+            expected_delegates_json = str(vgf_0_5_fixture)
         expected_delegates = load_expected_fixture(expected_delegates_json)
         assert got[1] == expected_delegates, (
             f"Test failed for {input_pte}. Expected and actual output differ."
