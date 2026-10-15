@@ -256,11 +256,13 @@ jobs:
     permissions: {}
     steps:
       - name: Create internal umbrella token
-        uses: getsentry/action-github-app-token@d4b5da6c5e37703f8c3b3e43abb5705b46e159cc # v3.0.0
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          app_id: ${{ secrets.ME_REPO_ACCESS_APP_ID }}
-          private_key: ${{ secrets.ME_REPO_ACCESS_PRIVATE_KEY }}
-          scope: Arm-Debug
+          app-id: ${{ secrets.ME_REPO_ACCESS_APP_ID }}
+          private-key: ${{ secrets.ME_REPO_ACCESS_PRIVATE_KEY }}
+          owner: Arm-Debug
+          repositories: executorch-extension-model-explorer
+          permission-contents: write
         id: umbrella_token
 
       - name: Notify umbrella after internal release
