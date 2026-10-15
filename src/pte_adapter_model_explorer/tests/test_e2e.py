@@ -9,6 +9,7 @@ import gzip
 import json
 import os
 import re
+import unittest
 from dataclasses import asdict
 from importlib.metadata import version
 from pathlib import Path
@@ -17,6 +18,8 @@ import pytest
 from packaging.version import Version
 
 from ..builder import builder
+
+_ASSERT = unittest.TestCase()
 
 FIXTURES_ROOT = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -77,8 +80,10 @@ def test_e2e(case_dir):
 
     expected_main = load_expected_fixture(expected_main_json)
 
-    assert got[0] == expected_main, (
-        f"Test failed for {input_pte}. Expected and actual output differ."
+    _ASSERT.assertEqual(
+        got[0],
+        expected_main,
+        msg=f"Test failed for {input_pte}. Expected and actual output differ.",
     )
 
     if os.path.exists(expected_delegates_json):
@@ -91,8 +96,10 @@ def test_e2e(case_dir):
         ):
             expected_delegates_json = str(vgf_0_5_fixture)
         expected_delegates = load_expected_fixture(expected_delegates_json)
-        assert got[1] == expected_delegates, (
-            f"Test failed for {input_pte}. Expected and actual output differ."
+        _ASSERT.assertEqual(
+            got[1],
+            expected_delegates,
+            msg=f"Test failed for {input_pte}. Expected and actual output differ.",
         )
 
 
@@ -117,17 +124,20 @@ def test_expected_main_fixtures_identical(fixture_pair):
 
     canonical_fixture, segmented_fixture = fixture_pair
 
-    assert os.path.exists(canonical_fixture), (
-        f"Missing canonical expected_main fixture: {canonical_fixture}"
+    _ASSERT.assertTrue(
+        os.path.exists(canonical_fixture),
+        msg=f"Missing canonical expected_main fixture: {canonical_fixture}",
     )
-    assert os.path.exists(segmented_fixture), (
-        f"Missing segmented expected_main fixture: {segmented_fixture}"
+    _ASSERT.assertTrue(
+        os.path.exists(segmented_fixture),
+        msg=f"Missing segmented expected_main fixture: {segmented_fixture}",
     )
 
     canonical_expected = load_expected_fixture(canonical_fixture)
     segmented_expected = load_expected_fixture(segmented_fixture)
 
-    assert segmented_expected == canonical_expected, (
-        "mobilenet_v2 expected_main outputs diverge between the segmented and "
-        "non-segmented fixtures."
+    _ASSERT.assertEqual(
+        segmented_expected,
+        canonical_expected,
+        msg="mobilenet_v2 expected_main outputs diverge between the segmented and non-segmented fixtures.",
     )

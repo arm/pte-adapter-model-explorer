@@ -73,8 +73,10 @@ jobs:
         run: |
           sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
           git add pyproject.toml
-          git commit -m "Update pyproject version to v$VERSION"
-          git push "https://x-access-token:${APP_TOKEN}@github.com/${REPOSITORY}.git" HEAD:main
+          if ! git diff --cached --quiet -- pyproject.toml; then
+            git commit -m "Update pyproject version to v$VERSION"
+            git push "https://x-access-token:${APP_TOKEN}@github.com/${REPOSITORY}.git" HEAD:main
+          fi
       - name: Tag new release
         env:
           APP_TOKEN: ${{ steps.get_app_token.outputs.token }}

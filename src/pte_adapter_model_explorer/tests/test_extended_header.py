@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import unittest
+
 import pytest
 
 from ..extended_header import (
@@ -14,6 +16,8 @@ from ..extended_header import (
     ExtendedHeaderNotFoundError,
     read_extended_header,
 )
+
+_ASSERT = unittest.TestCase()
 
 
 def _make_head(
@@ -45,9 +49,9 @@ def test_parse_minimal_header_assigns_zero_segment_size():
 
     header = ExtendedHeader.parse(head)
 
-    assert header.program_size == 0x1234
-    assert header.segment_base_offset == 0x5678
-    assert header.segment_data_size == 0
+    _ASSERT.assertEqual(header.program_size, 4660)
+    _ASSERT.assertEqual(header.segment_base_offset, 22136)
+    _ASSERT.assertEqual(header.segment_data_size, 0)
 
 
 def test_parse_full_header_reads_segment_data_size():
@@ -60,9 +64,9 @@ def test_parse_full_header_reads_segment_data_size():
 
     header = ExtendedHeader.parse(head)
 
-    assert header.program_size == 0x10
-    assert header.segment_base_offset == 0x20
-    assert header.segment_data_size == 0x30
+    _ASSERT.assertEqual(header.program_size, 16)
+    _ASSERT.assertEqual(header.segment_base_offset, 32)
+    _ASSERT.assertEqual(header.segment_data_size, 48)
 
 
 def test_parse_header_missing_magic_raises_not_found():
@@ -112,6 +116,6 @@ def test_read_extended_header_returns_parsed_header(tmp_path):
 
     header = read_extended_header(pte_path)
 
-    assert header.program_size == 0xFF
-    assert header.segment_base_offset == 0x100
-    assert header.segment_data_size == 0x200
+    _ASSERT.assertEqual(header.program_size, 255)
+    _ASSERT.assertEqual(header.segment_base_offset, 256)
+    _ASSERT.assertEqual(header.segment_data_size, 512)

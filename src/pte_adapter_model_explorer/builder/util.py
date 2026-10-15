@@ -136,8 +136,8 @@ def _format_scalar(value: Any) -> str:
     if hasattr(value, "item"):
         try:
             return _format_scalar(value.item())
-        except Exception:
-            pass
+        except (TypeError, ValueError):
+            return str(value)
     return str(value)
 
 
