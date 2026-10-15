@@ -255,7 +255,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     steps:
+      - name: Check for a clean release tag
+        id: release_tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          if [[ "$RELEASE_TAG" =~ ^v[0-9]+[.][0-9]+[.][0-9]+$ ]]; then
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "clean=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping umbrella update: not a clean release tag."
+          fi
+
       - name: Create internal umbrella token
+        if: steps.release_tag.outputs.clean == 'true'
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           app-id: ${{ secrets.ME_REPO_ACCESS_APP_ID }}
@@ -266,6 +280,7 @@ jobs:
         id: umbrella_token
 
       - name: Notify umbrella after internal release
+        if: steps.release_tag.outputs.clean == 'true'
         env:
           GH_TOKEN: ${{ steps.umbrella_token.outputs.token }}
           DEPENDENCY: ${{ github.event.repository.name }}
