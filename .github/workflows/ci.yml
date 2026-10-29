@@ -17,15 +17,15 @@ permissions:
 
 jobs:
   discover-adapters:
-    name: Discover published adapter versions
+    name: Discover latest compatible adapter versions
     runs-on: ${{ vars.LINUX_RUNNER }}
     env:
       PIP_INDEX_URL: ${{ secrets.INTERNAL_PYPI_AUTH_INDEX_URL || 'https://pypi.org/simple' }}
+      PYTHON_VERSIONS_JSON: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
+      TEST_RUNNERS_JSON: ${{ vars.TEST_RUNNERS }}
+      LINUX_RUNNER_JSON: ${{ toJSON(vars.LINUX_RUNNER) }}
     outputs:
-      vgf-versions: ${{ steps.vgf.outputs.versions }}
-      latest-vgf-version: ${{ steps.vgf.outputs.latest-version }}
-      tosa-versions: ${{ steps.tosa.outputs.versions }}
-      latest-tosa-version: ${{ steps.tosa.outputs.latest-version }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
@@ -38,24 +38,12 @@ jobs:
 
       - name: Install discovery tools
         shell: bash
-        run: |
-          python -m pip install --upgrade "pip>=25.2" packaging
+        run: python -m pip install --upgrade "pip>=25.2"
 
-      - name: Discover VGF versions
-        id: vgf
+      - name: Build latest-compatible test matrix
+        id: matrix
         shell: bash
-        run: |
-          python -m pip index versions vgf-adapter-model-explorer \
-            --json --no-cache-dir --python-version "$DEFAULT_PY_VERSION" | \
-            python scripts/discover-adapter-versions.py vgf-adapter-model-explorer
-
-      - name: Discover TOSA versions
-        id: tosa
-        shell: bash
-        run: |
-          python -m pip index versions tosa-adapter-model-explorer \
-            --json --no-cache-dir --python-version "$DEFAULT_PY_VERSION" | \
-            python scripts/discover-adapter-versions.py tosa-adapter-model-explorer
+        run: python scripts/discover-adapter-versions.py
 
   tests:
     name: Run tests (Python ${{ matrix.python-version }}, VGF ${{ matrix.vgf-version }}, TOSA ${{ matrix.tosa-version }}, ${{ matrix.runner }})
@@ -63,25 +51,38 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-        runner: ${{ fromJSON(vars.TEST_RUNNERS) }}
-        vgf-version: ${{ fromJSON(needs.discover-adapters.outputs.vgf-versions) }}
-        tosa-version: ${{ fromJSON(needs.discover-adapters.outputs.tosa-versions) }}
+        include: ${{ fromJSON(needs.discover-adapters.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
     steps:
+      - name: Verify compatible adapters exist
+        if: ${{ !matrix.available }}
+        shell: bash
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          VGF_VERSION: ${{ matrix.vgf-version }}
+          TOSA_VERSION: ${{ matrix.tosa-version }}
+        run: |
+          echo "::error::No compatible adapter versions for Python $PYTHON_VERSION (VGF: $VGF_VERSION, TOSA: $TOSA_VERSION)"
+          exit 1
+
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        if: ${{ matrix.available }}
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Checkout plugin repo
+        if: ${{ matrix.available }}
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
 
       - name: Set up virtual environment
+        if: ${{ matrix.available }}
         shell: bash
         env:
           PIP_INDEX_URL: ${{ secrets.INTERNAL_PYPI_AUTH_INDEX_URL || 'https://pypi.org/simple' }}
+          PIP_PRE: "1"
+          PIP_ONLY_BINARY: "spirv-adapter-model-explorer"
           VGF_VERSION: ${{ matrix.vgf-version }}
           TOSA_VERSION: ${{ matrix.tosa-version }}
         run: |
@@ -105,39 +106,32 @@ jobs:
           "$VENV_PYTHON" -c "from vgf_adapter_model_explorer.main import VGFAdapter; from tosa_adapter_model_explorer.main import TosaFlatbufferAdapter"
 
       - name: Lint and Format Check
+        if: ${{ matrix.available }}
         run: |
           ruff check --output-format=github
           ruff format --check
 
       - name: Type Check
+        if: ${{ matrix.available }}
         run: |
           pyright
 
       - name: Run Tests
+        if: ${{ matrix.available }}
         shell: bash
         env:
           PIP_INDEX_URL: ${{ secrets.INTERNAL_PYPI_AUTH_INDEX_URL || 'https://pypi.org/simple' }}
-          MATRIX_RUNNER: ${{ matrix.runner }}
-          LINUX_RUNNER: ${{ vars.LINUX_RUNNER }}
-          MATRIX_PYTHON_VERSION: ${{ matrix.python-version }}
-          MATRIX_VGF_VERSION: ${{ matrix.vgf-version }}
-          LATEST_VGF_VERSION: ${{ needs.discover-adapters.outputs.latest-vgf-version }}
-          MATRIX_TOSA_VERSION: ${{ matrix.tosa-version }}
-          LATEST_TOSA_VERSION: ${{ needs.discover-adapters.outputs.latest-tosa-version }}
-          DEFAULT_PY_VERSION: ${{ env.DEFAULT_PY_VERSION }}
+          GENERATE_COVERAGE: ${{ matrix.coverage }}
         run: |
           PYTEST_CVG_FLAGS=""
-          if [[ "$MATRIX_RUNNER" == "$LINUX_RUNNER" && \
-              "$MATRIX_PYTHON_VERSION" == "$DEFAULT_PY_VERSION" && \
-              "$MATRIX_VGF_VERSION" == "$LATEST_VGF_VERSION" && \
-              "$MATRIX_TOSA_VERSION" == "$LATEST_TOSA_VERSION" ]]; then
+          if [[ "$GENERATE_COVERAGE" == "true" ]]; then
             python -m pip install --group coverage
             PYTEST_CVG_FLAGS="-v --cov=pte_adapter_model_explorer --cov-report=lcov:reports/lcov.info"
           fi
           python -m pytest --tb=short ${PYTEST_CVG_FLAGS}
 
       - name: Upload coverage to Qlty
-        if: matrix.runner == vars.LINUX_RUNNER && matrix.python-version == env.DEFAULT_PY_VERSION && matrix.vgf-version == needs.discover-adapters.outputs.latest-vgf-version && matrix.tosa-version == needs.discover-adapters.outputs.latest-tosa-version
+        if: ${{ matrix.available && matrix.coverage }}
         uses: qltysh/qlty-action/coverage@9e8e09dfc3d82a968f4034f5265eaf3c142881f7 # v2.0.0
         with:
           token: ${{ secrets.QLTY_COVERAGE_TOKEN }}

@@ -13,7 +13,7 @@ name = "pte-adapter-model-explorer"
 version = "0.2.0"
 description = "Adapter for Model Explorer to support PTE files for Ethos-U and VGF targets"
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<3.15"
 keywords = ["model-explorer", "ethos", "pte", "visualization"]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -25,12 +25,14 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 
 dependencies = [
   "ai-edge-model-explorer>=0.1.28,<0.2.0",
   "vgf-adapter-model-explorer>=0.4.1,<0.6.0",
-  "tosa-adapter-model-explorer>=0.1.0,<0.3.0",
+  "tosa-adapter-model-explorer>=0.0.9,<0.3.0",
   "flatbuffers>25.9",
 ]
 
@@ -43,7 +45,6 @@ dev = [
   "pytest-timeout==2.4.0",
   "ruff==0.14.2",
   "pyright==1.1.407",
-  "ai-edge-model-explorer==0.1.32",
 ]
 coverage = [
   "pytest-cov==7.0.0",

@@ -2,58 +2,121 @@
 # SPDX-FileCopyrightText: Copyright 2026 Arm Limited and/or its affiliates <open-source-office@arm.com>
 # SPDX-License-Identifier: Apache-2.0
 
-"""Build the CI test matrix from pip's published adapter versions on stdin."""
+"""Discover the latest compatible adapter versions for the CI test matrix."""
 
-import argparse
 import json
 import os
+import subprocess
 import sys
-import tomllib
-from pathlib import Path
 
-from packaging.requirements import Requirement
-from packaging.utils import canonicalize_name
-from packaging.version import Version
 
-PROJECT_FILE = Path(__file__).resolve().parents[1] / "pyproject.toml"
+def latest_compatible_version(package: str, python_version: str) -> str | None:
+    """Find the latest available package version for a Python version."""
+    command = [
+        sys.executable,
+        "-m",
+        "pip",
+        "index",
+        "versions",
+        package,
+        "--pre",
+        "--json",
+        "--no-cache-dir",
+        "--python-version",
+        python_version,
+    ]
+
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    if result.returncode:
+        if "No matching distribution found" in result.stderr:
+            print(
+                f"::warning::No compatible {package} "
+                f"for Python {python_version}",
+                flush=True,
+            )
+            return None
+
+        raise RuntimeError(
+            f"Discovery failed for {package} "
+            f"on Python {python_version}:\n"
+            f"{result.stderr.strip()}"
+        )
+
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"Invalid index response for {package} "
+            f"on Python {python_version}: {exc}"
+        ) from exc
+
+    return data.get("latest")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("package", help="Adapter dependency to discover")
-    args = parser.parse_args()
+    """Generate the GitHub Actions test matrix."""
+    python_versions = json.loads(os.environ["PYTHON_VERSIONS_JSON"])
+    runners = json.loads(os.environ["TEST_RUNNERS_JSON"])
+    linux_runner = json.loads(os.environ["LINUX_RUNNER_JSON"])
+    default_python_version = os.environ["DEFAULT_PY_VERSION"]
 
-    with PROJECT_FILE.open("rb") as project_file:
-        project = tomllib.load(project_file)
-    requirements = map(Requirement, project["project"]["dependencies"])
-    requirement = next(
-        requirement
-        for requirement in requirements
-        if canonicalize_name(requirement.name)
-        == canonicalize_name(args.package)
-    )
+    if not isinstance(python_versions, list) or not python_versions:
+        raise ValueError("PYTHON_VERSIONS_JSON must be a nonempty JSON array")
 
-    index = json.load(sys.stdin)
-    versions = sorted(
-        {
-            parsed
-            for version in index["versions"]
-            if not (parsed := Version(version)).is_prerelease
-            and not parsed.is_devrelease
-            and parsed in requirement.specifier
-        }
-    )
-    if not versions:
-        raise ValueError(f"No published stable versions satisfy {requirement}")
+    if not isinstance(runners, list) or not runners:
+        raise ValueError("TEST_RUNNERS_JSON must be a nonempty JSON array")
 
-    version_list = [str(version) for version in versions]
-    output = (
-        f"versions={json.dumps(version_list)}\n"
-        f"latest-version={version_list[-1]}\n"
-    )
-    print(output, end="")
-    with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as file:
-        file.write(output)
+    entries = []
+
+    for python_version in python_versions:
+        vgf_version = latest_compatible_version(
+            "vgf-adapter-model-explorer", python_version
+        )
+        tosa_version = latest_compatible_version(
+            "tosa-adapter-model-explorer", python_version
+        )
+
+        available = bool(vgf_version and tosa_version)
+
+        for runner in runners:
+            entries.append(
+                {
+                    "python-version": python_version,
+                    "runner": runner,
+                    "vgf-version": vgf_version or "unavailable",
+                    "tosa-version": tosa_version or "unavailable",
+                    "available": available,
+                    "coverage": (
+                        available
+                        and python_version == default_python_version
+                        and runner == linux_runner
+                    ),
+                }
+            )
+
+    if not any(entry["coverage"] for entry in entries):
+        raise RuntimeError(
+            f"No Python {default_python_version} Linux runner "
+            "found for coverage"
+        )
+
+    if len(entries) > 256:
+        raise RuntimeError(
+            f"Matrix contains {len(entries)} jobs (GitHub Actions limit: 256)"
+        )
+
+    print(json.dumps(entries, indent=2))
+
+    with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+        output.write(
+            "matrix=" + json.dumps(entries, separators=(",", ":")) + "\n"
+        )
 
 
 if __name__ == "__main__":
