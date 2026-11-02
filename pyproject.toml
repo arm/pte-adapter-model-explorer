@@ -33,7 +33,7 @@ dependencies = [
   "ai-edge-model-explorer>=0.1.28,<0.2.0",
   "vgf-adapter-model-explorer>=0.4.1,<0.6.0",
   "tosa-adapter-model-explorer>=0.0.9,<0.3.0",
-  "flatbuffers>25.9",
+  "flatbuffers>=25.2.10",
 ]
 
 [project.urls]
