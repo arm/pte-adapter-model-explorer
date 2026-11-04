@@ -11,10 +11,12 @@ permissions:
 
 jobs:
   checks:
-    if: ${{ github.event.repository.private }}
-    uses: Arm-Debug/ai-debug-workflows/.github/workflows/internal-checks.yml@main
+    if: ${{ github.event.repository.private && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' }}
+    uses: Arm-Debug/github-workflow-wizardry/.github/workflows/internal-checks.yml@b1fec023c429c1027d936170f696a6ee6711ce6e
     with:
       internal_scan: true
       internal_review: true
     secrets:
-      BLACKDUCK_API_TOKEN: ${{ secrets.BLACKDUCK_API_TOKEN }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+      VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}

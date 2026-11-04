@@ -8,34 +8,56 @@ import json
 import os
 import re
 import subprocess  # nosec B404
-import sys
 
 
 def latest_compatible_version(package: str, python_version: str) -> str | None:
     """Find the latest available package version for a Python version."""
     command = [
-        sys.executable,
-        "-m",
+        "uv",
         "pip",
-        "index",
-        "versions",
-        package,
-        "--pre",
-        "--json",
-        "--no-cache-dir",
+        "compile",
+        "-",
+        "--no-deps",
+        "--no-build",
+        "--prerelease",
+        "allow",
+        "--no-header",
+        "--no-annotate",
+        "--no-cache",
+        "--no-python-downloads",
         "--python-version",
         python_version,
     ]
 
     result = subprocess.run(  # nosec B603
         command,
+        input=f"{package}\n",
         capture_output=True,
         text=True,
         check=False,
     )
 
     if result.returncode:
-        if "No matching distribution found" in result.stderr:
+        # uv reports an empty/incompatible index as an unsatisfiable
+        # resolution. Authentication and transport failures must still fail CI.
+        diagnostic = result.stderr.lower()
+        index_failed = any(
+            marker in diagnostic
+            for marker in (
+                "401",
+                "403",
+                "authentication",
+                "could not be queried",
+                "failed to fetch",
+                "connection",
+                "timed out",
+            )
+        )
+        if (
+            result.returncode == 1
+            and "no solution found" in diagnostic
+            and not index_failed
+        ):
             print(
                 f"::warning::No compatible {package} "
                 f"for Python {python_version}",
@@ -49,15 +71,14 @@ def latest_compatible_version(package: str, python_version: str) -> str | None:
             f"{result.stderr.strip()}"
         )
 
-    try:
-        data = json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
+    match = re.search(
+        rf"^{re.escape(package)}==([^\s;]+)$", result.stdout, re.MULTILINE
+    )
+    if match is None:
         raise RuntimeError(
-            f"Invalid index response for {package} "
-            f"on Python {python_version}: {exc}"
-        ) from exc
-
-    return data.get("latest")
+            f"Invalid uv resolution for {package} on Python {python_version}"
+        )
+    return match.group(1)
 
 
 def main() -> None:

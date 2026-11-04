@@ -18,15 +18,30 @@ permissions:
 jobs:
   discover-adapters:
     name: Discover latest compatible adapter versions
-    runs-on: ${{ vars.LINUX_RUNNER }}
+    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || vars.LINUX_RUNNER }}
     env:
-      PIP_INDEX_URL: ${{ secrets.INTERNAL_PYPI_AUTH_INDEX_URL || 'https://pypi.org/simple' }}
       PYTHON_VERSIONS_JSON: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
-      TEST_RUNNERS_JSON: ${{ vars.TEST_RUNNERS }}
-      LINUX_RUNNER_JSON: ${{ toJSON(vars.LINUX_RUNNER) }}
+      TEST_RUNNERS_JSON: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && '["ubuntu-latest"]' || vars.TEST_RUNNERS }}
+      LINUX_RUNNER_JSON: ${{ toJSON(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || vars.LINUX_RUNNER) }}
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
+      - name: Import internal credentials from Vault
+        id: vault
+        if: ${{ github.repository_owner == 'Arm-Debug' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]' }}
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          namespace: ${{ vars.VAULT_NAMESPACE }}
+          exportEnv: false
+          secrets: |
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} UV_DEFAULT_INDEX | UV_DEFAULT_INDEX ;
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} INTERNAL_PYPI_USERNAME | UV_INDEX_INTERNAL_USERNAME ;
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} INTERNAL_PYPI_PASSWORD | UV_INDEX_INTERNAL_PASSWORD
+
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
@@ -36,12 +51,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install discovery tools
-        shell: bash
-        run: python -m pip install --upgrade "pip>=25.2"
+      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5
+        with:
+          enable-cache: false
 
       - name: Build latest-compatible test matrix
         id: matrix
+        env:
+          UV_DEFAULT_INDEX: ${{ steps.vault.outputs.UV_DEFAULT_INDEX || 'https://pypi.org/simple' }}
+          UV_INDEX_INTERNAL_USERNAME: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_USERNAME }}
+          UV_INDEX_INTERNAL_PASSWORD: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_PASSWORD }}
         shell: bash
         run: python scripts/discover-adapter-versions.py
 
@@ -52,8 +71,30 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJSON(needs.discover-adapters.outputs.matrix) }}
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || matrix.runner }}
+    env:
+      UV_PRERELEASE: allow
     steps:
+      - name: Import internal credentials from Vault
+        id: vault
+        if: ${{ github.repository_owner == 'Arm-Debug' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]' }}
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          namespace: ${{ vars.VAULT_NAMESPACE }}
+          exportEnv: false
+          secrets: |
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} UV_DEFAULT_INDEX | UV_DEFAULT_INDEX ;
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} INTERNAL_PYPI_USERNAME | UV_INDEX_INTERNAL_USERNAME ;
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} INTERNAL_PYPI_PASSWORD | UV_INDEX_INTERNAL_PASSWORD
+
+      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5
+        with:
+          enable-cache: false
+
       - name: Verify compatible adapters exist
         if: ${{ !matrix.available }}
         shell: bash
@@ -80,9 +121,9 @@ jobs:
         if: ${{ matrix.available }}
         shell: bash
         env:
-          PIP_INDEX_URL: ${{ secrets.INTERNAL_PYPI_AUTH_INDEX_URL || 'https://pypi.org/simple' }}
-          PIP_PRE: "1"
-          PIP_ONLY_BINARY: "spirv-adapter-model-explorer"
+          UV_DEFAULT_INDEX: ${{ steps.vault.outputs.UV_DEFAULT_INDEX || 'https://pypi.org/simple' }}
+          UV_INDEX_INTERNAL_USERNAME: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_USERNAME }}
+          UV_INDEX_INTERNAL_PASSWORD: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_PASSWORD }}
           VGF_VERSION: ${{ matrix.vgf-version }}
           TOSA_VERSION: ${{ matrix.tosa-version }}
         run: |
@@ -97,12 +138,11 @@ jobs:
             VENV_PYTHON="$VENV_BIN/python"
           fi
           printf '%s\n' "$VENV_BIN" >> "$GITHUB_PATH"
-          "$VENV_PYTHON" -m pip install --upgrade "pip>=25.2"
-          "$VENV_PYTHON" -m pip install --upgrade . --group dev \
+          uv pip install --python "$VENV_PYTHON" --only-binary spirv-adapter-model-explorer --upgrade . --group dev \
             "vgf-adapter-model-explorer==$VGF_VERSION" \
             "tosa-adapter-model-explorer==$TOSA_VERSION"
-          "$VENV_PYTHON" -m pip check
-          "$VENV_PYTHON" -m pip show vgf-adapter-model-explorer tosa-adapter-model-explorer
+          uv pip check --python "$VENV_PYTHON"
+          uv pip show --python "$VENV_PYTHON" vgf-adapter-model-explorer tosa-adapter-model-explorer
           "$VENV_PYTHON" -c "from vgf_adapter_model_explorer.main import VGFAdapter; from tosa_adapter_model_explorer.main import TosaFlatbufferAdapter"
 
       - name: Lint and Format Check
@@ -116,19 +156,26 @@ jobs:
         run: |
           pyright
 
+      - name: Install coverage tools
+        if: ${{ matrix.available && matrix.coverage }}
+        shell: bash
+        env:
+          UV_DEFAULT_INDEX: ${{ steps.vault.outputs.UV_DEFAULT_INDEX || 'https://pypi.org/simple' }}
+          UV_INDEX_INTERNAL_USERNAME: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_USERNAME }}
+          UV_INDEX_INTERNAL_PASSWORD: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_PASSWORD }}
+        run: uv pip install --python "$(python -c 'import sys; print(sys.executable)')" --group coverage
+
       - name: Run Tests
         if: ${{ matrix.available }}
         shell: bash
         env:
-          PIP_INDEX_URL: ${{ secrets.INTERNAL_PYPI_AUTH_INDEX_URL || 'https://pypi.org/simple' }}
           GENERATE_COVERAGE: ${{ matrix.coverage }}
         run: |
-          PYTEST_CVG_FLAGS=""
+          PYTEST_CVG_FLAGS=()
           if [[ "$GENERATE_COVERAGE" == "true" ]]; then
-            python -m pip install --group coverage
-            PYTEST_CVG_FLAGS="-v --cov=pte_adapter_model_explorer --cov-report=lcov:reports/lcov.info"
+            PYTEST_CVG_FLAGS=(-v --cov=pte_adapter_model_explorer --cov-report=lcov:reports/lcov.info)
           fi
-          python -m pytest --tb=short ${PYTEST_CVG_FLAGS}
+          python -m pytest --tb=short "${PYTEST_CVG_FLAGS[@]}"
 
       - name: Upload coverage to Qlty
         if: ${{ matrix.available && matrix.coverage }}
@@ -140,29 +187,48 @@ jobs:
   build:
     name: Build and Publish Wheels
     needs: [tests]
-    runs-on: ${{ vars.LINUX_RUNNER }}
+    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || vars.LINUX_RUNNER }}
     steps:
+      - name: Import internal credentials from Vault
+        id: vault
+        if: ${{ github.repository_owner == 'Arm-Debug' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]' }}
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          namespace: ${{ vars.VAULT_NAMESPACE }}
+          exportEnv: false
+          secrets: |
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} UV_DEFAULT_INDEX | UV_DEFAULT_INDEX ;
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} INTERNAL_PYPI_USERNAME | UV_INDEX_INTERNAL_USERNAME ;
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} INTERNAL_PYPI_PASSWORD | UV_INDEX_INTERNAL_PASSWORD
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
       - uses: ./.github/actions/build-wheel
         env:
-          PIP_INDEX_URL: ${{ secrets.INTERNAL_PYPI_AUTH_INDEX_URL || 'https://pypi.org/simple' }}
+          UV_DEFAULT_INDEX: ${{ steps.vault.outputs.UV_DEFAULT_INDEX || 'https://pypi.org/simple' }}
+          UV_INDEX_INTERNAL_USERNAME: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_USERNAME }}
+          UV_INDEX_INTERNAL_PASSWORD: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_PASSWORD }}
         with:
           python-version: ${{ env.DEFAULT_PY_VERSION }}
-          internal-dev-version: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository_owner != 'arm' }}
+          internal-dev-version: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'Arm-Debug/pte-adapter-model-explorer' }}
 
       - name: Create SBOM output directory
         run: mkdir -p sbom
 
       - name: Generate wheel SBOM
         env:
-          PIP_INDEX_URL: ${{ secrets.INTERNAL_PYPI_AUTH_INDEX_URL || 'https://pypi.org/simple' }}
+          UV_DEFAULT_INDEX: ${{ steps.vault.outputs.UV_DEFAULT_INDEX || 'https://pypi.org/simple' }}
+          UV_INDEX_INTERNAL_USERNAME: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_USERNAME }}
+          UV_INDEX_INTERNAL_PASSWORD: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_PASSWORD }}
         run: |
-          python -m pip install --index-url https://pypi.org/simple cyclonedx-bom==7.3.0
-          python -m venv .sbom-venv
-          .sbom-venv/bin/python -m pip install --upgrade pip
-          .sbom-venv/bin/python -m pip install dist/*.whl
+          uv pip install --system --default-index https://pypi.org/simple cyclonedx-bom==7.3.0
+          python -m venv --clear .sbom-venv
+          uv pip install --python .sbom-venv/bin/python --prerelease allow --only-binary spirv-adapter-model-explorer dist/*.whl
           python -m cyclonedx_py environment .sbom-venv/bin/python \
             --output-format JSON \
             --output-file sbom/pte-adapter-model-explorer-wheel.cdx.json
@@ -189,20 +255,14 @@ jobs:
       name: pypi
       url: https://pypi.org/p/pte-adapter-model-explorer
     permissions:
-      contents: read
+      contents: write
       id-token: write
 
     steps:
-      - uses: getsentry/action-github-app-token@d4b5da6c5e37703f8c3b3e43abb5705b46e159cc #v3.0.0
-        id: get_app_token
-        with:
-          app_id: ${{ secrets.ME_REPO_ACCESS_APP_ID }}
-          private_key: ${{ secrets.ME_REPO_ACCESS_PRIVATE_KEY }}
-
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
-          token: ${{ steps.get_app_token.outputs.token }}
+          token: ${{ github.token }}
           persist-credentials: false
 
       - name: Generate release notes
@@ -240,13 +300,13 @@ jobs:
           files: |
             dist/*.whl
             sbom/*.json
-          token: ${{ steps.get_app_token.outputs.token }}
+          token: ${{ github.token }}
 
   notify-umbrella:
     name: Request umbrella dependency update
     needs: release-internal
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && github.repository == 'Arm-Debug/pte-adapter-model-explorer'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LINUX_RUNNER || 'self-hosted-ubuntu-latest' }}
     permissions: {}
     steps:
       - name: Check for a clean release tag
@@ -262,12 +322,27 @@ jobs:
             echo "Skipping umbrella update: not a clean release tag."
           fi
 
+      - name: Import internal credentials from Vault
+        id: vault
+        if: steps.release_tag.outputs.clean == 'true'
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          namespace: ${{ vars.VAULT_NAMESPACE }}
+          exportEnv: false
+          secrets: |
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} ME_REPO_ACCESS_APP_ID | ME_REPO_ACCESS_APP_ID ;
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} ME_REPO_ACCESS_PRIVATE_KEY | ME_REPO_ACCESS_PRIVATE_KEY
+
       - name: Create internal umbrella token
         if: steps.release_tag.outputs.clean == 'true'
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          app-id: ${{ secrets.ME_REPO_ACCESS_APP_ID }}
-          private-key: ${{ secrets.ME_REPO_ACCESS_PRIVATE_KEY }}
+          app-id: ${{ steps.vault.outputs.ME_REPO_ACCESS_APP_ID }}
+          private-key: ${{ steps.vault.outputs.ME_REPO_ACCESS_PRIVATE_KEY }}
           owner: Arm-Debug
           repositories: executorch-extension-model-explorer
           permission-contents: write
@@ -288,13 +363,29 @@ jobs:
 
   release-internal:
     name: Release to internal PyPI
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.repository_owner != 'arm'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.repository == 'Arm-Debug/pte-adapter-model-explorer'
     needs:
       - build
     runs-on: ${{ vars.LINUX_RUNNER }}
     permissions: {}
 
     steps:
+      - name: Import internal credentials from Vault
+        id: vault
+        if: ${{ github.repository_owner == 'Arm-Debug' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]' }}
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          namespace: ${{ vars.VAULT_NAMESPACE }}
+          exportEnv: false
+          secrets: |
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} PUBLISH_PYPI_HOST | PUBLISH_PYPI_HOST ;
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} PUBLISH_PYPI_USERNAME | PUBLISH_PYPI_USERNAME ;
+            kv/data/MLIA/CI?version=${{ vars.VAULT_CI_SECRET_VERSION || '0' }} PUBLISH_PYPI_PASSWORD | PUBLISH_PYPI_PASSWORD
+
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PY_VERSION }}
@@ -305,18 +396,28 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Check internal publishing configuration
+        shell: bash
+        env:
+          UPLOAD_URL: ${{ steps.vault.outputs.PUBLISH_PYPI_HOST }}
+        run: |
+          if [[ -z "$UPLOAD_URL" ]]; then
+            echo "Set PUBLISH_PYPI_HOST in Vault before publishing to Artifactory." >&2
+            exit 1
+          fi
+
       - name: Publish distribution to internal PyPI
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
-          repository-url: ${{ vars.INTERNAL_PYPI_UPLOAD_URL }}
-          user: ${{ secrets.INTERNAL_PYPI_USERNAME }}
-          password: ${{ secrets.INTERNAL_PYPI_TOKEN }}
+          repository-url: ${{ steps.vault.outputs.PUBLISH_PYPI_HOST }}
+          user: ${{ steps.vault.outputs.PUBLISH_PYPI_USERNAME }}
+          password: ${{ steps.vault.outputs.PUBLISH_PYPI_PASSWORD }}
           packages-dir: dist/
           attestations: false
 
   sync-commits-to-public-repo:
     name: Sync commits to public repo
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository_owner != 'arm'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'Arm-Debug/pte-adapter-model-explorer'
     needs: build
     runs-on: ubuntu-latest
     steps:
