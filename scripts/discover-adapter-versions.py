@@ -6,7 +6,8 @@
 
 import json
 import os
-import subprocess
+import re
+import subprocess  # nosec B404
 import sys
 
 
@@ -26,7 +27,7 @@ def latest_compatible_version(package: str, python_version: str) -> str | None:
         python_version,
     ]
 
-    result = subprocess.run(
+    result = subprocess.run(  # nosec B603
         command,
         capture_output=True,
         text=True,
@@ -75,6 +76,10 @@ def main() -> None:
     entries = []
 
     for python_version in python_versions:
+        if not isinstance(python_version, str) or not re.fullmatch(
+            r"3\.\d+", python_version
+        ):
+            raise ValueError(f"Invalid Python version: {python_version}")
         vgf_version = latest_compatible_version(
             "vgf-adapter-model-explorer", python_version
         )
