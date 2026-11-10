@@ -218,7 +218,6 @@ jobs:
           UV_INDEX_INTERNAL_PASSWORD: ${{ steps.vault.outputs.UV_INDEX_INTERNAL_PASSWORD }}
         with:
           python-version: ${{ env.DEFAULT_PY_VERSION }}
-          internal-dev-version: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'Arm-Debug/pte-adapter-model-explorer' }}
 
       - name: Create SBOM output directory
         run: mkdir -p sbom
